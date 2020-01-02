@@ -4,6 +4,7 @@
 #include <time.h>
 #define M_PI 3.14159265358979323846
 
+
 static void on_keyboard(unsigned char key, int x, int y);
 static void on_timer(int value);
 static void on_reshape(int width, int height);
@@ -29,17 +30,6 @@ static float x_ravni2 = 10;
 static float y_ravni2 = 1;
 static float z_ravni2 = 150;
 
-typedef struct
-{
-    float x;
-    float y;
-    float z;
-    int tip;
-} Prepreka;
-
-
-Prepreka prepreke1[50];
-Prepreka prepreke2[50];
 static int pos1;
 static int pos2;
 
@@ -47,6 +37,16 @@ static void nacrtaj_prepreke(int tip);
 static void postavi_prepreke(int tip);
 static void postavi1();
 static int prva = 1;
+
+typedef struct{
+    float x;
+    float y;
+    float z;
+    int tip;
+} Prepreka;
+
+Prepreka prepreke1[50];
+Prepreka prepreke2[50];
 
 
 int main(int argc, char **argv){
@@ -62,12 +62,14 @@ int main(int argc, char **argv){
     glutReshapeFunc(on_reshape);
     glutDisplayFunc(on_display);
 
+    
     glClearColor(255.0/255, 223.0/255, 211.0/255, 0); /*sa interneta boja*/
     glEnable(GL_DEPTH_TEST);    
     glEnable(GL_COLOR_MATERIAL);
     
     srand(time(NULL));
     glutFullScreen();
+
 
     glutMainLoop();
 
@@ -93,19 +95,16 @@ static void on_keyboard(unsigned char key, int x, int y){
             break;
         case 'a':
         case 'A':
-            kretanja[0]= 1;
+            kretanja[0] = 1;
             glutPostRedisplay();
             break;
-        
-            
-    
+
     }
 }
 
-static void on_release(unsigned char key, int x, int y)
-{
-    switch (key)
-    {
+static void on_release(unsigned char key, int x, int y){
+    
+    switch (key){
     case 'a':
     case 'A':
         kretanja[0] -= 1;
@@ -114,16 +113,19 @@ static void on_release(unsigned char key, int x, int y)
     case 'D':
         kretanja[1] -= 1;
         break;
+        
     }
 }
+
 
 static void on_timer(int value){
  
     if (value != 0)
         return;
+
+    z_ravni1 -= 0.45;
+    z_ravni2 -= 0.45;
     
-    z_ravni1-= 0.45;
-    z_ravni2-= 0.45;
     int i;
     for ( i = 0; i < pos1; i++)
         prepreke1[i].z -= 0.45;
@@ -142,11 +144,10 @@ static void on_timer(int value){
         postavi_prepreke(1);
     }
     
-    if(z_ravni2 + 50 < 0){
+    if(z_ravni2 + 50 <= 0){
         z_ravni2 = 150;
         postavi_prepreke(2);
-    }
-    
+    }    
 
     glutPostRedisplay();
 
@@ -166,14 +167,17 @@ static void on_reshape(int width, int height){
                    1, 150);
 }
 
+
+
 static void on_display(void){
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+
     gluLookAt(x_koordinata, y_koordinata + 5, -5 + z_koordinata,
-              x_koordinata, y_koordinata,  9 + z_koordinata,
+              x_koordinata, y_koordinata,  7 + z_koordinata,
               0, 1,  0);
  
    /* glBegin(GL_LINES);
@@ -196,11 +200,11 @@ static void on_display(void){
         glVertex3f(0,0,-100);
     glEnd(); */
     
+
     glPushMatrix();
         nacrtaj_put();
     glPopMatrix();
-    
-    
+
     glPushMatrix();
         glTranslatef(x_koordinata,r_telo,z_koordinata);
         nacrtaj_pandu();
@@ -211,6 +215,7 @@ static void on_display(void){
         postavi_prepreke(2);
         prva = 0;
     }
+  
 
     nacrtaj_prepreke(1);
     nacrtaj_prepreke(2);
@@ -219,7 +224,7 @@ static void on_display(void){
 }
 
 static void nacrtaj_put(){
-    
+
     glPushMatrix();
         glColor3f(254.0/255,200.0/255,216.0/255); /*sa interneta boja*/
         glTranslatef(0, -y_ravni1/2, z_ravni1);
@@ -427,4 +432,5 @@ static void lizalica(){
                 glPopMatrix();
     
         glPopMatrix();
+
 }

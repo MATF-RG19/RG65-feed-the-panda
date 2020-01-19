@@ -301,7 +301,7 @@ static void on_display(void){
 
    glTranslatef(x_koordinata-2,y_koordinata+50,z_koordinata
 );
-  glScalef(6,1,15);
+  glScalef(7,1,15);
   
 
 

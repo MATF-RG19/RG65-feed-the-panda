@@ -5,11 +5,14 @@
 #include <time.h>
 #include <string.h>
 #include "image.h"
+
+#include "drawing.h"
 #define M_PI 3.14159265358979323846
 
 #define FILENAME0 "clouds.bmp"
 #define FILENAME1 "pozadina.bmp"
 #define FILENAME2 "gameover.bmp"
+#define FILENAME3 "startgame.bmp"
 
 static void on_keyboard(unsigned char key, int x, int y);
 static void on_timer(int value);
@@ -17,17 +20,15 @@ static void on_reshape(int width, int height);
 static void on_release(unsigned char key,int x,int y);
 static void on_display(void);
 
-static GLuint names[3];
+static GLuint names[4];
 static void nacrtaj_put();
-static void nacrtaj_pandu();
-static void lizalica();
-static void bombona();
 
 
 static float r_telo = 0.7;
 static float duzina = 100;
 static int kretanja[] = {0, 0};
 static float brzina = 0.5;
+static float panda_param = 1;
 
 static int start = 0;
 
@@ -50,6 +51,7 @@ static void kolizija();
 
 
 static void game_over();
+static void startgame();
 
 typedef struct{
     float x;
@@ -59,8 +61,8 @@ typedef struct{
     int tip2;
 } Prepreka;
 
-Prepreka prepreke1[70];
-Prepreka prepreke2[70];
+Prepreka prepreke1[110];
+Prepreka prepreke2[110];
 static int prva_poz;
 static int druga_poz;
 static void nacrtaj_prepreke(int tip);
@@ -91,13 +93,14 @@ int main(int argc, char **argv){
      * fajla.
      */
     image = image_init(0, 0);
+      /* Generisu se identifikatori tekstura. */
+    glGenTextures(4, names);
+
 
     /* Kreira se prva tekstura. */
     image_read(image, FILENAME0);
 
-    /* Generisu se identifikatori tekstura. */
-    glGenTextures(2, names);
-
+  
     glBindTexture(GL_TEXTURE_2D, names[0]);
     glTexParameteri(GL_TEXTURE_2D,
                     GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -136,6 +139,23 @@ int main(int argc, char **argv){
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
                  image->width, image->height, 0,
                  GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+    
+       image_read(image, FILENAME3);
+
+  
+    glBindTexture(GL_TEXTURE_2D, names[3]);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB,
+                 image->width, image->height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+    
     /* Iskljucujemo aktivnu teksturu */
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -145,7 +165,7 @@ int main(int argc, char **argv){
     glutKeyboardFunc(on_keyboard);
     glutKeyboardUpFunc(on_release);
     glutReshapeFunc(on_reshape);
-    glutDisplayFunc(on_display);
+    glutDisplayFunc(startgame);
     
     
 
@@ -173,6 +193,7 @@ static void on_keyboard(unsigned char key, int x, int y){
         case 'G':
             if(!start){
                 start = 1;
+                glutDisplayFunc(on_display);
                 glutTimerFunc(20, on_timer, 0);
             }
             break;
@@ -185,6 +206,30 @@ static void on_keyboard(unsigned char key, int x, int y){
         case 'A':
             kretanja[0] = 1;
             glutPostRedisplay();
+            break;
+        case 'r':
+        case 'R':
+            score = 0;
+            start = 0;
+            x_koordinata = 0;
+            y_koordinata = 0.5;
+            z_koordinata = 5;
+            x_ravni1 = 15;
+            y_ravni1 = 1;
+            z_ravni1 = 50;
+            x_ravni2 = 15;
+            y_ravni2 = 1;
+            z_ravni2 = 150;
+            prva = 1;
+            nivo = 0;
+            prva_poz = 0;
+            druga_poz = 0;
+            brzina = 0.5;
+            panda_param = 1;
+            glutDisplayFunc(on_display);
+            glutPostRedisplay();
+            
+            
             break;
             
 
@@ -215,6 +260,7 @@ static void on_timer(int value){
     if(score == nivo*100 || score == nivo*100 + 5){
 	nivo++;
     	brzina = brzina + (nivo-1)*0.03;
+        panda_param+=0.1;
 }
 
   if(z_ravni1 <= -50){
@@ -339,7 +385,6 @@ static void on_display(void){
         glVertex3f(0,100,0);
         glVertex3f(0,0,0);
         glVertex3f(0,-100,0);
-
         glColor3f(0,0,1);
         glVertex3f(0,0,0);
         glVertex3f(0,0,100);
@@ -355,8 +400,10 @@ static void on_display(void){
     glPopMatrix();
 
     glPushMatrix();
+ 
         
         glTranslatef(x_koordinata,r_telo,z_koordinata);
+           glScalef(panda_param,panda_param,panda_param);
         nacrtaj_pandu();
     glPopMatrix();
     
@@ -433,37 +480,6 @@ static void nacrtaj_put(){
 
 }
 
-static void nacrtaj_pandu(){
-    
-    glPushMatrix(); /*telo pande*/
-        glColor3f(0, 0, 0.0001);
-        glScalef(1.1, 0.4, 0.9);
-        glutSolidSphere(r_telo, 100, 100);
-    glPopMatrix();
-    
-    float r_glava = 0.8 * r_telo;
-
-    glPushMatrix(); 
-        glColor3f(1, 1, 1);
-        glTranslatef(0, 0.5 + r_telo - 0.3, 0);
-        glScalef(1, 0.5, 1);
-        glutSolidSphere(r_glava, 100, 100);
-    glPopMatrix();
-    
-    float r_uvo = 0.25 * r_telo;
-
-    glPushMatrix(); 
-        glColor3f(0, 0, 0);
-        glTranslatef(-0.35, 1.25, 0);
-        glutSolidSphere(r_uvo, 100, 100);
-    glPopMatrix();
-
-    glPushMatrix();  
-        glColor3f(0, 0, 0);
-        glTranslatef(0.35, 1.25, 0);	
-        glutSolidSphere(r_uvo, 100, 100);
-    glPopMatrix(); 
-}
 static void postavi_prepreke(int tip)
 {
     if (tip == 1)
@@ -473,11 +489,11 @@ static void postavi_prepreke(int tip)
 
     
     int i,j;
-    for ( i = 0; i < 10; i++){
+    for ( i = 0; i < 12; i++){
         
         int broj_pr = (int)rand() % 7;
         if(broj_pr == 0)
-        broj_pr++;
+        broj_pr=2;
        
         
         int moze_prepreka[] = {1, 1, 1, 1, 1, 1, 1};
@@ -511,11 +527,11 @@ static void postavi_prepreke(int tip)
                 }
                 p.x = pozicije[pos];
                 if (tip == 1){
-                    p.z = z_ravni1 + 50 - i * 10;
+                    p.z = z_ravni1 + 50 - i * 8;
                     prepreke1[prva_poz++] = p;
                 }
                 else {
-                    p.z = z_ravni2 + 50 - i * 10;
+                    p.z = z_ravni2 + 50 - i * 8;
                     prepreke2[druga_poz++] = p;
                 }
             }
@@ -530,8 +546,8 @@ static void postavi1()
     for ( i = 0; i <= 3; i++){
         int broj_pr = (int)rand() % 7;
         if(broj_pr == 0)
-            broj_pr++;
-        int hrana = 0;
+            broj_pr = 2;
+        
         int moze_prepreka[] = {0, 0, 0, 0, 0, 0};
         for (j = 0; j < broj_pr; j++){
             
@@ -544,10 +560,9 @@ static void postavi1()
                 
                 int t = (int)rand() % 2;
                 int k = (int)rand() % 2;
-                if (t == 0 && !hrana){
+                if (t == 0){
                     p.tip1 = 0;
                     p.y = 0.5;
-                    hrana = 1;
                     if( k == 0)
                         p.tip2 = 0;
                     else
@@ -591,14 +606,14 @@ static void nacrtaj_prepreke(int tip)
             glPushMatrix();
             glTranslatef(p.x, p.y, p.z);
             glScalef(1, 1, 1);
-            lizalica();
+            nacrtaj_lizalicu();
             glPopMatrix();
         }
         else if (p.tip2 == 1){
             glPushMatrix();
             glTranslatef(p.x, p.y, p.z);
             glScalef(1, 1, 1);
-            bombona();
+            nacrtaj_bombonu();
             glPopMatrix();
         }
         }
@@ -623,81 +638,7 @@ static void nacrtaj_prepreke(int tip)
     }
 }
 
-static void lizalica(){
-    glPushMatrix();
-        glColor3f(1,1,1);
-        glScalef(.5,2,0);
-        glutSolidCube(0.3);
-    glPopMatrix();
-        
-    GLUquadricObj* quadratic;
-    quadratic = gluNewQuadric();
-    gluQuadricNormals(quadratic, GLU_SMOOTH);
-        
-        glPushMatrix();
-            glTranslatef(0,.8,0);
-            
-            glPushMatrix();
-                glColor3f(224.0/255, 254.0/255, 254.0/255);
-                gluDisk(quadratic,0,.05,32,32);
-            glPopMatrix();
-            
-            glPushMatrix();
-                glColor3f(1,250.0/255,129.0/255);
-                gluDisk(quadratic,.05,.1,32,32);
-            glPopMatrix();
-            
-            glPushMatrix();
-                glColor3f(254.0/255,235.0/255,201.0/255);
-                gluDisk(quadratic,.1,.2,32,32);
-            glPopMatrix();
-            
-            glPushMatrix();
-                glColor3f(1,1,1);
-                gluDisk(quadratic,.2,.3,32,32);
-            glPopMatrix();
-            
-            glPushMatrix();
-                glColor3f(191.0/255,213.0/255,232.0/255);
-                gluDisk(quadratic,.3,.4,32,32);
-            glPopMatrix();
-            
-            glPushMatrix();
-                glColor3f(251.0/255,182.0/255,209.0/255);
-                gluDisk(quadratic,.4,.5,32,32);
-                glPopMatrix();
-    
-        glPopMatrix();
 
-}
-
-static void bombona(){
-
-    glPushMatrix();
-        glScalef(.4,.4,.4);
-        glPushMatrix();
-        glColor3f(1,250.0/255,129.0/255);
-        glScalef(.7,.5,.5);
-        glTranslatef(-2,0,0);
-        glutSolidTetrahedron();
-        glPopMatrix();
-        glPushMatrix();
-        glColor3f(1,1,1);
-        glScalef(1,.8,.8);
-        glutSolidIcosahedron();
-        glPopMatrix();
-        glPushMatrix();
-        glColor3f(1,250.0/255,129.0/255);
-        glScalef(.7,.5,.5);
-        glTranslatef(2,0,0);
-        glRotatef(180,0,1,0);
-        glutSolidTetrahedron();
-        glPopMatrix();
-    glPopMatrix();
-    
-    
-    
-}
 
 static float udaljenost(Prepreka pr){
     
@@ -717,18 +658,18 @@ static void kolizija(){
         for(i = 0; i < prva_poz; i++){
             Prepreka pr = prepreke1[i];
             float u = udaljenost(pr);
-            if(u < 1.3){
+            if(u < 1.3*panda_param){
                 if(prepreke1[i].tip1 == 0 && prepreke1[i].tip2 == 0){
                     score += 10;
-                    prepreke1[i].x = -100;
+                    prepreke1[i].x = 100;
                 }
                 else if(prepreke1[i].tip1 == 0 && prepreke1[i].tip2 == 1){
                     score += 5;
-                    prepreke1[i].x = -100;
+                    prepreke1[i].x = 100;
                 }
                 else if (prepreke1[i].tip1 == 1 && prepreke1[i].tip2 == 0){
                     score -= 5;
-                    prepreke1[i].x = -100;
+                    prepreke1[i].x = 100;
                 }
                 else if (prepreke1[i].tip1 == 1 && prepreke1[i].tip2 == 1){
                     
@@ -744,7 +685,7 @@ static void kolizija(){
          for(i = 0; i < druga_poz; i++){
             Prepreka pr = prepreke2[i];
             float u = udaljenost(pr);
-            if(u < 1.22){
+            if(u < 1.3*panda_param){
                 if(prepreke2[i].tip1 == 0 && prepreke2[i].tip2 == 0){
                     score += 10;
                     prepreke2[i].x = 100;
@@ -822,6 +763,42 @@ void game_over(){
     
     glPopMatrix();
     
+    glutSwapBuffers();
+	
+    
+    
+}
+void startgame(){
+    
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0, 3.5, 0,
+              0, 0, 0,
+              1, 0, 0);
+    
+        glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, names[3]);
+	
+		glBegin(GL_POLYGON);
+			glTexCoord2f(0, 0);
+			glVertex3f(-2, 0, -3);
+			
+			glTexCoord2f(0, 1);
+			glVertex3f(2, 0, -3);
+			
+			glTexCoord2f(1, 1);
+			glVertex3f(2, 0, 3);
+			
+			glTexCoord2f(1, 0);
+			glVertex3f(-2, 0, 3);
+		glEnd();
+        
+	glDisable(GL_TEXTURE_2D);
+    
+
     glutSwapBuffers();
 	
     

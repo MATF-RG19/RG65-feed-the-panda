@@ -15,7 +15,7 @@
 #define FILENAME3 "startgame.bmp"
 
 float r_telo = 0.7;
-
+/*Funkcija kojom crtamo pandu*/
 void nacrtaj_pandu(){
     
     glPushMatrix(); /*telo pande*/
@@ -24,9 +24,9 @@ void nacrtaj_pandu(){
         glutSolidSphere(r_telo, 100, 100);
     glPopMatrix();
     
-    float r_glava = 0.8 * r_telo;
+    float r_glava = 0.8 * r_telo; /*parametar koji odredjuje velicinu glave pande*/
 
-    glPushMatrix(); 
+    glPushMatrix(); /*glava pande*/
         glColor3f(1, 1, 1);
         glTranslatef(0, 0.5 + r_telo - 0.3, 0);
         glScalef(1, 0.5, 1);
@@ -35,26 +35,30 @@ void nacrtaj_pandu(){
     
     float r_uvo = 0.25 * r_telo;
 
-    glPushMatrix(); 
+    glPushMatrix(); /*jedno uvo*/
         glColor3f(0, 0, 0);
         glTranslatef(-0.35, 1.25, 0);
         glutSolidSphere(r_uvo, 100, 100);
     glPopMatrix();
 
-    glPushMatrix();  
+    glPushMatrix();  /*drugo uvo*/
         glColor3f(0, 0, 0);
         glTranslatef(0.35, 1.25, 0);	
         glutSolidSphere(r_uvo, 100, 100);
     glPopMatrix(); 
 }
 
+/*Funkcija kojom crtamo lizalicu*/
 void nacrtaj_lizalicu(){
+    
+    /*Prvo crtamo 'drsku'*/
     glPushMatrix();
         glColor3f(1,1,1);
         glScalef(.5,2,0);
         glutSolidCube(0.3);
     glPopMatrix();
         
+    /*Iscrtavamo diskove razlicitih boja i poluprecnika*/
     GLUquadricObj* quadratic;
     quadratic = gluNewQuadric();
     gluQuadricNormals(quadratic, GLU_SMOOTH);
@@ -95,31 +99,32 @@ void nacrtaj_lizalicu(){
         glPopMatrix();
 
 }
-
+/*Funkcija kojom iscrtavamo bombonu*/
 void nacrtaj_bombonu(){
 
     glPushMatrix();
         glScalef(.4,.4,.4);
-        glPushMatrix();
-        glColor3f(1,250.0/255,129.0/255);
-        glScalef(.7,.5,.5);
-        glTranslatef(-2,0,0);
-        glutSolidTetrahedron();
+        
+        glPushMatrix(); /*crtamo levi kraj bombone koji je ustvari mala piramida*/
+            glColor3f(1,250.0/255,129.0/255);
+            glScalef(.7,.5,.5);
+            glTranslatef(-2,0,0);
+            glutSolidTetrahedron();
         glPopMatrix();
-        glPushMatrix();
-        glColor3f(1,1,1);
-        glScalef(1,.8,.8);
-        glutSolidIcosahedron();
+        
+        glPushMatrix(); /*crtamo 'telo' bombone*/
+            glColor3f(1,1,1);
+            glScalef(1,.8,.8);
+            glutSolidIcosahedron();
         glPopMatrix();
-        glPushMatrix();
-        glColor3f(1,250.0/255,129.0/255);
-        glScalef(.7,.5,.5);
-        glTranslatef(2,0,0);
-        glRotatef(180,0,1,0);
-        glutSolidTetrahedron();
+        
+        glPushMatrix(); /*crtamo desni kraj bombone*/
+            glColor3f(1,250.0/255,129.0/255);
+            glScalef(.7,.5,.5);
+            glTranslatef(2,0,0);
+            glRotatef(180,0,1,0);
+            glutSolidTetrahedron();
         glPopMatrix();
     glPopMatrix();
-    
-    
     
 }
